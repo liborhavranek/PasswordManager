@@ -39,15 +39,38 @@ def save():
 	if len(website) == 0 or len(email) == 0 or len(password) == 0:
 		messagebox.showerror(title="Ooops", message="Please insert valid information")
 	else:
-		is_okay = messagebox.askokcancel(title=website, message=f"These are the details entered\n Email: {email}\nPassword: {password}\n It's okay?")
+		is_okay = messagebox.showinfo(title=website, message=f"These are the details entered\n Email: {email}\nPassword: {password}\n It's okay?")
 
 		if is_okay:
-			with open("data.json", "w") as data_files:
-				json.dump(new_data,data_files)
-
+			try:
+				with open("data.json", "r") as data_file:
+					data = json.load(data_file)
+					data.update(new_data)
+			except FileNotFoundError:
+				with open("data.json", 'w') as data_file:
+					json.dump(new_data, data_file, indent=4)
+				pass
+			else:
+				with open("data.json", 'w') as data_file:
+					json.dump(data, data_file, indent=4)
+			finally:
 				website_entry.delete(0, END)
 				password_entry.delete(0, END)
-
+# ---------------------------- SEARCH PASSWORD ------------------------------- #
+def find_password():
+	website = website_entry.get()
+	try:
+		with open("data.json") as data_file:
+			data = json.load(data_file)
+	except FileNotFoundError:
+		messagebox.showinfo(title="error", message="No data file")
+	else:
+		if website in data:
+			email = data[website]["email"]
+			password = data[website]["password"]
+			messagebox.showinfo(message=f"{email}\n, Password: {password}", title=f"Your account on {website}")
+		else:
+			messagebox.showinfo(title="error", message=f"No details for {website} exist")
 # ---------------------------- UI SETUP ------------------------------- #
 
 
@@ -65,7 +88,10 @@ website_label.grid(column=0, row=1)
 
 website_entry = Entry(width=35)
 website_entry.focus()
-website_entry.grid(column=1, row=1, columnspan=2, sticky="EW")
+website_entry.grid(column=1, row=1, sticky="EW")
+
+search_button = Button(text="Search", command=find_password)
+search_button.grid(column=2, row=1, sticky="EW")
 
 email_label = Label(text="Email/Username:")
 email_label.grid(column=0, row=2)
